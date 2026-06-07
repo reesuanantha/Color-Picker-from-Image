@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Color Picker from Image</title>
+<title>Color Picker</title>
 
 <style>
 body {
@@ -11,15 +11,10 @@ body {
   background: #f4f4f4;
 }
 
-h2 {
-  margin-top: 20px;
-}
-
 canvas {
-  border: 2px solid #333;
-  max-width: 90%;
-  cursor: crosshair;
+  border: 2px solid black;
   margin-top: 20px;
+  cursor: crosshair;
 }
 
 #colorBox {
@@ -28,23 +23,12 @@ canvas {
   border: 2px solid #000;
   margin: 10px auto;
 }
-
-.output {
-  margin-top: 20px;
-  font-size: 18px;
-}
-
-button {
-  margin-top: 10px;
-  padding: 8px 15px;
-  cursor: pointer;
-}
 </style>
 </head>
 
 <body>
 
-<h2>🎨 Color Picker from Image</h2>
+<h2>🎨 Color Picker From Image</h2>
 
 <input type="file" id="upload" accept="image/*">
 
@@ -52,12 +36,9 @@ button {
 
 <canvas id="canvas"></canvas>
 
-<div class="output">
-  <p>Selected Color</p>
+<div>
   <div id="colorBox"></div>
-  <p id="colorCode">HEX: #000000 | RGB: rgb(0,0,0)</p>
-
-  <button onclick="copyColor()">Copy HEX</button>
+  <p id="colorCode">Click on image</p>
 </div>
 
 <script>
@@ -69,33 +50,42 @@ const colorBox = document.getElementById("colorBox");
 const colorCode = document.getElementById("colorCode");
 
 let img = new Image();
-let currentHex = "#000000";
+let scaleX = 1;
+let scaleY = 1;
 
-// Load image
-upload.addEventListener("change", function (e) {
+// IMAGE LOAD
+upload.addEventListener("change", function(e){
   const file = e.target.files[0];
   const reader = new FileReader();
 
-  reader.onload = function (event) {
+  reader.onload = function(event){
+    img = new Image();
+
+    img.onload = function(){
+      canvas.width = img.width;
+      canvas.height = img.height;
+
+      // draw image
+      ctx.drawImage(img, 0, 0);
+
+      // scaling fix
+      scaleX = canvas.width / canvas.offsetWidth;
+      scaleY = canvas.height / canvas.offsetHeight;
+    }
+
     img.src = event.target.result;
-  };
+  }
 
   reader.readAsDataURL(file);
 });
 
-// Draw image
-img.onload = function () {
-  canvas.width = img.width;
-  canvas.height = img.height;
-  ctx.drawImage(img, 0, 0);
-};
+// CLICK COLOR PICK
+canvas.addEventListener("click", function(e){
 
-// Pick color on click
-canvas.addEventListener("click", function (e) {
   const rect = canvas.getBoundingClientRect();
 
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
+  const x = Math.floor((e.clientX - rect.left) * (canvas.width / rect.width));
+  const y = Math.floor((e.clientY - rect.top) * (canvas.height / rect.height));
 
   const pixel = ctx.getImageData(x, y, 1, 1).data;
 
@@ -103,24 +93,15 @@ canvas.addEventListener("click", function (e) {
   const g = pixel[1];
   const b = pixel[2];
 
-  const hex = rgbToHex(r, g, b);
-  currentHex = hex;
+  const hex = rgbToHex(r,g,b);
 
-  colorBox.style.backgroundColor = hex;
-  colorCode.innerText = `HEX: ${hex} | RGB: rgb(${r},${g},${b})`;
+  colorBox.style.background = hex;
+  colorCode.innerText = `HEX: ${hex} | RGB: (${r},${g},${b})`;
 });
 
-// RGB → HEX
-function rgbToHex(r, g, b) {
-  return "#" + [r, g, b]
-    .map(x => x.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-// Copy HEX
-function copyColor() {
-  navigator.clipboard.writeText(currentHex);
-  alert("Copied: " + currentHex);
+// RGB TO HEX
+function rgbToHex(r,g,b){
+  return "#" + [r,g,b].map(x => x.toString(16).padStart(2,"0")).join("");
 }
 </script>
 
