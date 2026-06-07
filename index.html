@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Color Picker from Image</title>
+
+<style>
+body {
+  font-family: Arial;
+  text-align: center;
+  background: #f4f4f4;
+}
+
+h2 {
+  margin-top: 20px;
+}
+
+canvas {
+  border: 2px solid #333;
+  max-width: 90%;
+  cursor: crosshair;
+  margin-top: 20px;
+}
+
+#colorBox {
+  width: 80px;
+  height: 80px;
+  border: 2px solid #000;
+  margin: 10px auto;
+}
+
+.output {
+  margin-top: 20px;
+  font-size: 18px;
+}
+
+button {
+  margin-top: 10px;
+  padding: 8px 15px;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<h2>🎨 Color Picker from Image</h2>
+
+<input type="file" id="upload" accept="image/*">
+
+<br>
+
+<canvas id="canvas"></canvas>
+
+<div class="output">
+  <p>Selected Color</p>
+  <div id="colorBox"></div>
+  <p id="colorCode">HEX: #000000 | RGB: rgb(0,0,0)</p>
+
+  <button onclick="copyColor()">Copy HEX</button>
+</div>
+
+<script>
+const upload = document.getElementById("upload");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+const colorBox = document.getElementById("colorBox");
+const colorCode = document.getElementById("colorCode");
+
+let img = new Image();
+let currentHex = "#000000";
+
+// Load image
+upload.addEventListener("change", function (e) {
+  const file = e.target.files[0];
+  const reader = new FileReader();
+
+  reader.onload = function (event) {
+    img.src = event.target.result;
+  };
+
+  reader.readAsDataURL(file);
+});
+
+// Draw image
+img.onload = function () {
+  canvas.width = img.width;
+  canvas.height = img.height;
+  ctx.drawImage(img, 0, 0);
+};
+
+// Pick color on click
+canvas.addEventListener("click", function (e) {
+  const rect = canvas.getBoundingClientRect();
+
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  const pixel = ctx.getImageData(x, y, 1, 1).data;
+
+  const r = pixel[0];
+  const g = pixel[1];
+  const b = pixel[2];
+
+  const hex = rgbToHex(r, g, b);
+  currentHex = hex;
+
+  colorBox.style.backgroundColor = hex;
+  colorCode.innerText = `HEX: ${hex} | RGB: rgb(${r},${g},${b})`;
+});
+
+// RGB → HEX
+function rgbToHex(r, g, b) {
+  return "#" + [r, g, b]
+    .map(x => x.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+// Copy HEX
+function copyColor() {
+  navigator.clipboard.writeText(currentHex);
+  alert("Copied: " + currentHex);
+}
+</script>
+
+</body>
+</html>
