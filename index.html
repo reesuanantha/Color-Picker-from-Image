@@ -2,33 +2,82 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Color Picker</title>
+<title>Color Picker from Image</title>
 
 <style>
 body {
-  font-family: Arial;
+  font-family: Arial, sans-serif;
   text-align: center;
-  background: #f4f4f4;
+
+  /* 🌈 Background */
+  background: linear-gradient(135deg, #1e3c72, #2a5298, #6dd5ed);
+  min-height: 100vh;
+  margin: 0;
+  padding: 20px;
+  color: white;
+}
+
+h1 {
+  color: white;
+  text-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+}
+
+input {
+  margin-top: 10px;
 }
 
 canvas {
-  border: 2px solid black;
   margin-top: 20px;
+  border: 3px solid white;
   cursor: crosshair;
+  max-width: 90%;
+  box-shadow: 0px 4px 15px rgba(0,0,0,0.4);
+}
+
+.result-box {
+  margin-top: 20px;
+  display: inline-block;
+  padding: 15px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0px 4px 15px rgba(0,0,0,0.3);
+  color: white;
 }
 
 #colorBox {
-  width: 80px;
-  height: 80px;
-  border: 2px solid #000;
+  width: 120px;
+  height: 120px;
   margin: 10px auto;
+  border: 3px solid white;
+  border-radius: 10px;
+}
+
+button {
+  margin-top: 10px;
+  padding: 10px 15px;
+  border: none;
+  background: #ffffff;
+  color: #000;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button:hover {
+  background: #ddd;
+}
+
+#info {
+  font-weight: bold;
+  margin-top: 10px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>🎨 Color Picker From Image</h2>
+<h1>🎨 Color Picker from Image</h1>
 
 <input type="file" id="upload" accept="image/*">
 
@@ -36,9 +85,10 @@ canvas {
 
 <canvas id="canvas"></canvas>
 
-<div>
+<div class="result-box">
   <div id="colorBox"></div>
-  <p id="colorCode">Click on image</p>
+  <div id="info">Upload image and click on it</div>
+  <button onclick="copyColor()">Copy HEX</button>
 </div>
 
 <script>
@@ -47,13 +97,12 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
 const colorBox = document.getElementById("colorBox");
-const colorCode = document.getElementById("colorCode");
+const info = document.getElementById("info");
 
 let img = new Image();
-let scaleX = 1;
-let scaleY = 1;
+let currentHex = "#000000";
 
-// IMAGE LOAD
+// IMAGE UPLOAD
 upload.addEventListener("change", function(e){
   const file = e.target.files[0];
   const reader = new FileReader();
@@ -65,12 +114,7 @@ upload.addEventListener("change", function(e){
       canvas.width = img.width;
       canvas.height = img.height;
 
-      // draw image
       ctx.drawImage(img, 0, 0);
-
-      // scaling fix
-      scaleX = canvas.width / canvas.offsetWidth;
-      scaleY = canvas.height / canvas.offsetHeight;
     }
 
     img.src = event.target.result;
@@ -93,11 +137,21 @@ canvas.addEventListener("click", function(e){
   const g = pixel[1];
   const b = pixel[2];
 
-  const hex = rgbToHex(r,g,b);
+  const hex = rgbToHex(r, g, b);
+  currentHex = hex;
 
   colorBox.style.background = hex;
-  colorCode.innerText = `HEX: ${hex} | RGB: (${r},${g},${b})`;
+
+  info.innerHTML =
+    "HEX: " + hex + "<br>" +
+    "RGB: rgb(" + r + "," + g + "," + b + ")";
 });
+
+// COPY FUNCTION
+function copyColor(){
+  navigator.clipboard.writeText(currentHex);
+  alert("Copied: " + currentHex);
+}
 
 // RGB TO HEX
 function rgbToHex(r,g,b){
